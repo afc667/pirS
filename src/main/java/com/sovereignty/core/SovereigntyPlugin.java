@@ -2,6 +2,15 @@ package com.sovereignty.core;
 
 import com.sovereignty.cache.ChunkCache;
 import com.sovereignty.caravan.CaravanManager;
+import com.sovereignty.commands.CaravanCommand;
+import com.sovereignty.commands.DiplomacyCommand;
+import com.sovereignty.commands.HireCommand;
+import com.sovereignty.commands.MercenaryCommand;
+import com.sovereignty.commands.ProvinceCommand;
+import com.sovereignty.commands.RoleCommand;
+import com.sovereignty.commands.SkirmishCommand;
+import com.sovereignty.commands.SpyCommand;
+import com.sovereignty.commands.WarCommand;
 import com.sovereignty.database.DatabaseManager;
 import com.sovereignty.database.queries.ProvinceQueries;
 import com.sovereignty.integration.DynmapHook;
@@ -21,6 +30,9 @@ import com.sovereignty.relics.RelicManager;
 import com.sovereignty.roles.RoleManager;
 import com.sovereignty.skirmish.SkirmishManager;
 import com.sovereignty.stability.StabilityEngine;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -108,8 +120,9 @@ public final class SovereigntyPlugin extends JavaPlugin {
                     + "Check your config.yml database settings.", ex);
         }
 
-        // ── 3. Initialize PDC keys for CoreBlock ─────────────────────────
+        // ── 3. Initialize PDC keys for CoreBlock + SovereigntyItems ───────
         CoreBlock.initKeys(this);
+        com.sovereignty.items.SovereigntyItems.initKeys(this);
 
         // ── 4. Province Manager + Cache ──────────────────────────────────
         ChunkCache chunkCache = new ChunkCache();
@@ -181,6 +194,17 @@ public final class SovereigntyPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(relicManager, this);
         getServer().getPluginManager().registerEvents(skirmishManager, this);
 
+        // ── 10. Command Registration ─────────────────────────────────────
+        registerCommand("province", new ProvinceCommand(provinceManager));
+        registerCommand("dip", new DiplomacyCommand());
+        registerCommand("war", new WarCommand());
+        registerCommand("role", new RoleCommand(roleManager, provinceManager));
+        registerCommand("caravan", new CaravanCommand(caravanManager));
+        registerCommand("spy", new SpyCommand());
+        registerCommand("skirmish", new SkirmishCommand(skirmishManager, provinceManager));
+        registerCommand("mercenary", new MercenaryCommand(mercenaryManager));
+        registerCommand("hire", new HireCommand(mercenaryManager, provinceManager));
+
         getLogger().info("Sovereignty v" + getDescription().getVersion() + " enabled.");
     }
 
@@ -210,4 +234,23 @@ public final class SovereigntyPlugin extends JavaPlugin {
     public RelicManager getRelicManager() { return relicManager; }
     public SkirmishManager getSkirmishManager() { return skirmishManager; }
     public MercenaryManager getMercenaryManager() { return mercenaryManager; }
+
+    // ── Command Registration Helper ──────────────────────────────────────
+
+    /**
+     * Registers a {@link CommandExecutor} (and optionally a {@link TabCompleter})
+     * for the given command name. Silently logs a warning if the command is not
+     * declared in {@code plugin.yml}.
+     */
+    private <T extends CommandExecutor> void registerCommand(String name, T executor) {
+        PluginCommand cmd = getCommand(name);
+        if (cmd == null) {
+            getLogger().warning("Command '" + name + "' is not registered in plugin.yml — skipping.");
+            return;
+        }
+        cmd.setExecutor(executor);
+        if (executor instanceof TabCompleter) {
+            cmd.setTabCompleter((TabCompleter) executor);
+        }
+    }
 }
