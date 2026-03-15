@@ -1,5 +1,6 @@
 plugins {
     java
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "com.sovereignty"
@@ -43,4 +44,14 @@ tasks.processResources {
     filesMatching("plugin.yml") {
         expand(props)
     }
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    relocate("com.zaxxer.hikari", "com.sovereignty.libs.hikari")
+    relocate("com.github.benmanes.caffeine", "com.sovereignty.libs.caffeine")
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
