@@ -45,9 +45,9 @@ import java.util.logging.Logger;
 public final class EspionageListener implements Listener {
 
     private static final MiniMessage MINI = MiniMessage.miniMessage();
-    private static final int SABOTAGE_RADIUS = 5;
-    private static final int SABOTAGE_DURATION_TICKS = 300; // 15 seconds × 20 tps
-    private static final double SABOTAGE_STABILITY_DRAIN = 15.0;
+    private final int sabotageRadius;
+    private final int sabotageDurationTicks;
+    private final double sabotageStabilityDrain;
 
     private final Plugin plugin;
     private final ProvinceManager provinceManager;
@@ -60,7 +60,7 @@ public final class EspionageListener implements Listener {
     private final Map<UUID, Integer> activeSabotages = new ConcurrentHashMap<>();
 
     /**
-     * Constructs the espionage listener.
+     * Constructs the espionage listener with configurable parameters.
      *
      * @param plugin             the owning plugin
      * @param provinceManager    the province manager
@@ -80,6 +80,11 @@ public final class EspionageListener implements Listener {
         this.dynmapHook = dynmapHook;
         this.stabilityEngine = stabilityEngine;
         this.logger = logger;
+        // Read configurable values from plugin config, with sensible defaults
+        this.sabotageRadius = plugin.getConfig().getInt("espionage.sabotage-radius", 5);
+        int durationSeconds = plugin.getConfig().getInt("espionage.sabotage-duration-seconds", 15);
+        this.sabotageDurationTicks = durationSeconds * 20;
+        this.sabotageStabilityDrain = plugin.getConfig().getDouble("espionage.sabotage-stability-drain", 15.0);
     }
 
     /**
@@ -159,7 +164,7 @@ public final class EspionageListener implements Listener {
         double distance = loc.distance(new Location(
                 loc.getWorld(), core.getX() + 0.5, core.getY(), core.getZ() + 0.5
         ));
-        if (distance > SABOTAGE_RADIUS) return;
+        if (distance > sabotageRadius) return;
 
         // Must have forged passport
         if (itemsAdderListener != null && !itemsAdderListener.hasForgedPassport(player)) {
@@ -200,7 +205,7 @@ public final class EspionageListener implements Listener {
                 ticks++;
 
                 // Render progress particles above the player
-                double progress = (double) ticks / SABOTAGE_DURATION_TICKS;
+                double progress = (double) ticks / sabotageDurationTicks;
                 Location particleLoc = player.getLocation().add(0, 2.5, 0);
                 player.getWorld().spawnParticle(
                         Particle.REDSTONE, particleLoc, 1,
@@ -222,7 +227,7 @@ public final class EspionageListener implements Listener {
                 bar.append("<yellow>]</yellow>");
                 player.sendActionBar(MINI.deserialize(bar.toString()));
 
-                if (ticks >= SABOTAGE_DURATION_TICKS) {
+                if (ticks >= sabotageDurationTicks) {
                     // Sabotage complete!
                     cancel();
                     completeSabotage(player, targetProvince);
@@ -242,7 +247,7 @@ public final class EspionageListener implements Listener {
         activeSabotages.remove(player.getUniqueId());
 
         // Drain stability
-        double newStability = targetProvince.getStability() - SABOTAGE_STABILITY_DRAIN;
+        double newStability = targetProvince.getStability() - sabotageStabilityDrain;
         targetProvince.setStability(newStability);
 
         // Consume the forged passport
@@ -253,7 +258,7 @@ public final class EspionageListener implements Listener {
         // Alert the player
         player.sendMessage(MINI.deserialize(
                 "<green>✔ Sabotage successful!</green> <gray>Enemy stability drained by <red>"
-                        + SABOTAGE_STABILITY_DRAIN + "</red>.</gray>"
+                        + sabotageStabilityDrain + "</red>.</gray>"
         ));
 
         // Server-wide alert
@@ -266,7 +271,7 @@ public final class EspionageListener implements Listener {
 
         logger.info("[EspionageListener] " + player.getName() + " sabotaged province '"
                 + targetProvince.getName() + "' — stability drained by "
-                + SABOTAGE_STABILITY_DRAIN);
+                + sabotageStabilityDrain);
     }
 
     /**

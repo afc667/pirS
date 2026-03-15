@@ -187,8 +187,14 @@ public final class DynmapHook {
         try {
             dynmapApi.getClass().getMethod("setPlayerVisiblity", String.class, boolean.class)
                     .invoke(dynmapApi, playerName, false);
-        } catch (Exception e) {
-            logger.warning("[DynmapHook] Failed to hide player: " + playerName);
+        } catch (Exception ignored) {
+            // Fallback: try alternate spelling used in some Dynmap versions
+            try {
+                dynmapApi.getClass().getMethod("setPlayerVisibility", String.class, boolean.class)
+                        .invoke(dynmapApi, playerName, false);
+            } catch (Exception e) {
+                logger.warning("[DynmapHook] Failed to hide player: " + playerName);
+            }
         }
     }
 
@@ -202,8 +208,14 @@ public final class DynmapHook {
         try {
             dynmapApi.getClass().getMethod("setPlayerVisiblity", String.class, boolean.class)
                     .invoke(dynmapApi, playerName, true);
-        } catch (Exception e) {
-            logger.warning("[DynmapHook] Failed to show player: " + playerName);
+        } catch (Exception ignored) {
+            // Fallback: try alternate spelling used in some Dynmap versions
+            try {
+                dynmapApi.getClass().getMethod("setPlayerVisibility", String.class, boolean.class)
+                        .invoke(dynmapApi, playerName, true);
+            } catch (Exception e) {
+                logger.warning("[DynmapHook] Failed to show player: " + playerName);
+            }
         }
     }
 }

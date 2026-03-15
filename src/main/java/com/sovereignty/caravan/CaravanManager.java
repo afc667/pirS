@@ -120,6 +120,14 @@ public final class CaravanManager {
         double yieldMultiplier = roleManager.getCaravanYieldMultiplier(sourceProvince.getId());
         double finalValue = baseValue * yieldMultiplier;
 
+        // Withdraw the tribute amount from the source province owner's Vault balance
+        org.bukkit.OfflinePlayer sourceOwner = Bukkit.getOfflinePlayer(sourceProvince.getOwnerUuid());
+        if (!vaultManager.withdraw(sourceOwner, finalValue)) {
+            logger.warning("[CaravanManager] Failed to withdraw " + vaultManager.format(finalValue)
+                    + " from " + sourceOwner.getName() + " — caravan not spawned.");
+            return Optional.empty();
+        }
+
         // Spawn the Llama caravan at the source Core
         Location spawnLoc = new Location(world,
                 sourceCore.getX() + 0.5, sourceCore.getY() + 1, sourceCore.getZ() + 0.5);

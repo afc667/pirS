@@ -134,8 +134,7 @@ CREATE TABLE IF NOT EXISTS sov_council_roles (
                                 ON DELETE CASCADE,
     CONSTRAINT fk_role_player   FOREIGN KEY (player_uuid) REFERENCES sov_players (uuid)
                                 ON DELETE CASCADE,
-    CONSTRAINT uq_role_player   UNIQUE (player_uuid),
-    CONSTRAINT uq_role_slot     UNIQUE (province_id, role)
+    CONSTRAINT uq_role_player   UNIQUE (player_uuid)
 );
 
 CREATE INDEX idx_council_province ON sov_council_roles (province_id);

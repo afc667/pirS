@@ -104,10 +104,11 @@ public final class RoleManager {
         CouncilRole current = playerRoles.remove(playerUuid);
         if (current == null || current == CouncilRole.NONE) return;
 
+        // Only remove from province slot if the player actually holds it
         switch (current) {
-            case MARSHAL -> provinceMarshal.remove(provinceId);
-            case CHANCELLOR -> provinceChancellor.remove(provinceId);
-            case STEWARD -> provinceSteward.remove(provinceId);
+            case MARSHAL -> provinceMarshal.remove(provinceId, playerUuid);
+            case CHANCELLOR -> provinceChancellor.remove(provinceId, playerUuid);
+            case STEWARD -> provinceSteward.remove(provinceId, playerUuid);
             default -> { /* no-op */ }
         }
         logger.info("[RoleManager] Revoked " + current.name() + " from player "
