@@ -1,0 +1,17 @@
+name: Sovereignty
+version: '${version}'
+main: com.sovereignty.core.SovereigntyPlugin
+api-version: '1.20'
+description: A hardcore RPG Claim Engine merging Factions, Towny, and Paradox grand strategy.
+authors:
+  - Sovereignty Team
+commands:
+  province:
+    description: Province management commands
+    aliases: [p, prov]
+  dip:
+    description: Opens the diplomacy GUI
+    aliases: [diplomacy]
+  war:
+    description: Warfare management commands
+    aliases: [siege]

@@ -1,0 +1,42 @@
+plugins {
+    java
+}
+
+group = "com.sovereignty"
+version = "1.0.0-SNAPSHOT"
+description = "Sovereignty — A Hardcore RPG Claim Engine"
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/")
+}
+
+dependencies {
+    // PaperMC API — provided at runtime by the server
+    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+
+    // HikariCP — high-performance JDBC connection pool
+    implementation("com.zaxxer:HikariCP:5.1.0")
+
+    // Caffeine — high-performance caching library for O(1) chunk lookups
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    options.release.set(17)
+}
+
+tasks.processResources {
+    val props = mapOf("version" to version)
+    inputs.properties(props)
+    filesMatching("plugin.yml") {
+        expand(props)
+    }
+}
