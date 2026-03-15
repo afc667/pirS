@@ -91,12 +91,15 @@ public final class DatabaseManager {
         // SQLite supports only one writer at a time; keep the pool small
         config.setMaximumPoolSize(1);
         config.setMinimumIdle(1);
-        config.setConnectionTimeout(5_000);
-        config.setIdleTimeout(300_000);
-        config.setMaxLifetime(600_000);
+        config.setConnectionTimeout(30_000);
+        // Disable eviction — SQLite connections are local and never go stale
+        config.setIdleTimeout(0);
+        config.setMaxLifetime(0);
         config.addDataSourceProperty("journal_mode", "WAL");
         config.addDataSourceProperty("foreign_keys", "true");
-        config.setInitializationFailTimeout(-1);
+        // Fail fast for SQLite — the DB is local, so a connection failure is a
+        // real configuration error and should surface immediately.
+        config.setInitializationFailTimeout(5_000);
 
         this.dataSource = new HikariDataSource(config);
         // Dedicated pool — keeps DB I/O off the Netty / main-thread pools
@@ -153,6 +156,7 @@ public final class DatabaseManager {
                 logger.info("Database schema initialized successfully (" + (sqlite ? "SQLite" : "MySQL") + ").");
             } catch (SQLException | IOException e) {
                 logger.log(Level.SEVERE, "Failed to initialize database schema", e);
+                throw new RuntimeException("Schema initialization failed", e);
             }
         }, executor);
     }
