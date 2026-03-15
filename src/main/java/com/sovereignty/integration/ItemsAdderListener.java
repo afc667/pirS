@@ -104,13 +104,12 @@ public final class ItemsAdderListener implements Listener {
 
     /**
      * Intercepts block placement to detect custom Province Core blocks.
-     * If the placed item matches the configured ItemsAdder core namespace,
+     * If the placed item matches the configured ItemsAdder core namespace
+     * (via either ItemsAdder or the vanilla SovereigntyItems PDC tag),
      * the block is registered as a Province Core.
      */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (!itemsAdderAvailable) return;
-
         ItemStack item = event.getItemInHand();
         String customId = getItemsAdderId(item);
         if (customId == null || !customId.equals(coreNamespace)) return;
@@ -179,17 +178,17 @@ public final class ItemsAdderListener implements Listener {
     }
 
     /**
-     * Extracts the ItemsAdder custom ID from an {@link ItemStack}'s PDC.
+     * Extracts the Sovereignty custom item ID from an {@link ItemStack}'s PDC.
+     * Checks both the ItemsAdder bridged key and the vanilla SovereigntyItems key.
      *
      * @param item the item to inspect
-     * @return the custom ID string, or {@code null} if not an ItemsAdder item
+     * @return the custom ID string, or {@code null} if not a custom item
      */
     public String getItemsAdderId(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        // ItemsAdder stores its ID under the "itemsadder:id" key
-        // We also check our own bridged key
+        // Check our bridged key (works for both ItemsAdder and vanilla-tagged items)
         return pdc.get(itemsAdderIdKey, PersistentDataType.STRING);
     }
 
@@ -207,12 +206,12 @@ public final class ItemsAdderListener implements Listener {
 
     /**
      * Checks whether a player's inventory contains a forged passport.
+     * Works with both ItemsAdder and vanilla-tagged passports.
      *
      * @param player the player to inspect
      * @return {@code true} if the player carries a forged passport
      */
     public boolean hasForgedPassport(Player player) {
-        if (!itemsAdderAvailable) return false;
         // Check off-hand first
         String offHandId = getItemsAdderId(player.getInventory().getItemInOffHand());
         if (forgedPassportNamespace.equals(offHandId)) return true;
@@ -227,11 +226,11 @@ public final class ItemsAdderListener implements Listener {
 
     /**
      * Removes one forged passport from the player's inventory (consumed on use).
+     * Works with both ItemsAdder and vanilla-tagged passports.
      *
      * @param player the player whose passport is consumed
      */
     public void consumeForgedPassport(Player player) {
-        if (!itemsAdderAvailable) return;
         // Check off-hand first
         ItemStack offHand = player.getInventory().getItemInOffHand();
         if (forgedPassportNamespace.equals(getItemsAdderId(offHand))) {
