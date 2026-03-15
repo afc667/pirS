@@ -60,6 +60,11 @@ public final class DatabaseManager {
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         config.addDataSourceProperty("useServerPrepStmts", "true");
 
+        // Allow the pool to start even when the database is temporarily unreachable.
+        // Connections will be established lazily when getConnection() is called,
+        // and callers already handle SQLException gracefully.
+        config.setInitializationFailTimeout(-1);
+
         this.dataSource = new HikariDataSource(config);
         // Dedicated pool — keeps DB I/O off the Netty / main-thread pools
         this.executor = Executors.newFixedThreadPool(4, r -> {
