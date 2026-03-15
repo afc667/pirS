@@ -29,3 +29,13 @@ commands:
   spy:
     description: Espionage and sabotage commands
     aliases: [espionage]
+  skirmish:
+    description: Declare a Border Skirmish on a rival province's border chunk
+    aliases: [sk]
+  mercenary:
+    description: Toggle mercenary mode or respond to contract proposals
+    usage: /mercenary [on|off|accept|decline]
+    aliases: [merc]
+  hire:
+    description: Hire a mercenary for your province
+    usage: /hire <player> <amount> <hours>

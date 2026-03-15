@@ -96,3 +96,45 @@ espionage:
   sabotage-radius: 5               # Block radius from enemy Core
   sabotage-duration-seconds: 15    # Uninterrupted sneak duration
   sabotage-stability-drain: 15.0   # Flat stability drain on success
+
+# ─── Phase 2.5: Unique Relics System ────────────────────────────────────
+# Six unique, irreplaceable Relics that grant game-breaking strategic buffs.
+# Identified by their ItemsAdder namespace. Each exists as a single item.
+relics:
+  enabled: true
+  disease-spore:
+    namespace: "sovereignty:disease_spore"
+    infection-duration-minutes: 10   # Chunk infection duration
+  physicist-goggles:
+    namespace: "sovereignty:physicist_goggles"
+    detection-radius: 30             # Block radius for enemy Glowing
+    scan-interval-ticks: 40          # Scan frequency (40 = 2 seconds)
+  nichirin-sword:
+    namespace: "sovereignty:nichirin_sword"
+    core-damage-multiplier: 3        # Siege damage multiplier vs Cores
+  demon-ash:
+    namespace: "sovereignty:demon_ash"
+    silence-duration-minutes: 5      # Alert suppression duration
+  poetryland-hoe:
+    namespace: "sovereignty:poetryland_hoe"
+    crop-multiplier: 3               # Crop drop multiplier
+    tax-penalty-reduction: 0.5       # High Tax Stability penalty reduction
+  crystal-of-resonance:
+    namespace: "sovereignty:crystal_of_resonance"
+    core-hp-multiplier: 2            # Core HP multiplier
+    influence-multiplier: 3          # Influence generation multiplier
+
+# ─── Phase 2.5: Border Skirmishes ───────────────────────────────────────
+# Low-stakes localized aggression on outermost border chunks.
+skirmish:
+  enabled: true
+  warning-phase-minutes: 5           # Global warning before combat
+  combat-duration-minutes: 15        # Active PvP / protection bypass window
+  cooldown-hours: 24                 # Per-province cooldown between skirmishes
+
+# ─── Phase 2.5: Mercenary Enclave ───────────────────────────────────────
+# Solo player integration via hire contracts and temporary citizenship.
+mercenary:
+  enabled: true
+  max-contract-hours: 48             # Maximum contract duration
+  proposal-timeout-minutes: 2        # Time for mercenary to accept/decline

@@ -171,6 +171,20 @@ public final class Province {
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
+    /**
+     * Checks whether a player is a member (citizen) of this province.
+     *
+     * <p>In the current minimal model, membership is defined as being
+     * the province's owner (Lord). This method is designed to be extended
+     * to include citizens, vassals, and active mercenaries.
+     *
+     * @param playerUuid the UUID of the player to check
+     * @return {@code true} if the player is a member of this province
+     */
+    public boolean hasMember(java.util.UUID playerUuid) {
+        return ownerUuid.equals(playerUuid);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
