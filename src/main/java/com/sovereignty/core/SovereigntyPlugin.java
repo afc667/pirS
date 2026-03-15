@@ -86,27 +86,37 @@ public final class SovereigntyPlugin extends JavaPlugin {
         String dbPass = getConfig().getString("database.password", "");
 
         // ── 2. Database ──────────────────────────────────────────────────
-        databaseManager = new DatabaseManager(dbHost, dbPort, dbName, dbUser, dbPass, getLogger());
+        try {
+            databaseManager = new DatabaseManager(dbHost, dbPort, dbName, dbUser, dbPass, getLogger());
+        } catch (Exception ex) {
+            getLogger().log(Level.SEVERE,
+                    "Failed to create database pool — DB features will be unavailable until restart. "
+                    + "Check your config.yml database settings.", ex);
+        }
 
         // ── 3. Initialize PDC keys for CoreBlock ─────────────────────────
         CoreBlock.initKeys(this);
 
         // ── 4. Province Manager + Cache ──────────────────────────────────
         ChunkCache chunkCache = new ChunkCache();
-        ProvinceQueries queries = new ProvinceQueries(databaseManager, getLogger());
-        provinceManager = new ProvinceManager(queries, chunkCache, getLogger());
+        if (databaseManager != null) {
+            ProvinceQueries queries = new ProvinceQueries(databaseManager, getLogger());
+            provinceManager = new ProvinceManager(queries, chunkCache, getLogger());
 
-        // ── 5. Schema init → warm caches (async) ────────────────────────
-        databaseManager.initializeSchema()
-                .thenCompose(v -> provinceManager.warmCaches())
-                .whenComplete((v, ex) -> {
-                    if (ex != null) {
-                        getLogger().log(Level.SEVERE, "Failed to initialize Sovereignty", ex);
-                    } else {
-                        getLogger().info("Caches warmed in "
-                                + (System.currentTimeMillis() - start) + " ms.");
-                    }
-                });
+            // ── 5. Schema init → warm caches (async) ────────────────────
+            databaseManager.initializeSchema()
+                    .thenCompose(v -> provinceManager.warmCaches())
+                    .whenComplete((v, ex) -> {
+                        if (ex != null) {
+                            getLogger().log(Level.SEVERE, "Failed to initialize Sovereignty", ex);
+                        } else {
+                            getLogger().info("Caches warmed in "
+                                    + (System.currentTimeMillis() - start) + " ms.");
+                        }
+                    });
+        } else {
+            getLogger().warning("Database unavailable — skipping schema initialization and cache warming.");
+        }
 
         // ── 6. Phase 2: Stability Engine (with cultural-pressure toggle) ─
         boolean culturalPressure = getConfig().getBoolean("stability.cultural-pressure", false);
