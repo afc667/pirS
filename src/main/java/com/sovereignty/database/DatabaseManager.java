@@ -147,9 +147,15 @@ public final class DatabaseManager {
                 try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
                     // Execute each statement separated by semicolons
                     for (String statement : sql.split(";")) {
-                        String trimmed = statement.trim();
-                        if (!trimmed.isEmpty() && !trimmed.startsWith("--")) {
-                            stmt.execute(trimmed);
+                        // Strip comment-only lines so that blocks like
+                        //   "-- section header\nCREATE TABLE ..."
+                        // are not incorrectly skipped.
+                        String cleaned = statement.lines()
+                                .filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("--"))
+                                .collect(Collectors.joining("\n"))
+                                .trim();
+                        if (!cleaned.isEmpty()) {
+                            stmt.execute(cleaned);
                         }
                     }
                 }
