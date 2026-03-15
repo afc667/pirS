@@ -3,8 +3,8 @@ plugins {
 }
 
 group = "com.sovereignty"
-version = "1.0.0-SNAPSHOT"
-description = "Sovereignty — A Hardcore RPG Claim Engine"
+version = "2.0.0-SNAPSHOT"
+description = "Sovereignty — A Hardcore RPG Claim Engine (Phase 2: Micro-SMP)"
 
 java {
     toolchain {
@@ -15,11 +15,15 @@ java {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://jitpack.io")  // VaultAPI
 }
 
 dependencies {
     // PaperMC API — provided at runtime by the server
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+
+    // Vault Economy API — provided at runtime (soft dependency)
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
 
     // HikariCP — high-performance JDBC connection pool
     implementation("com.zaxxer:HikariCP:5.1.0")

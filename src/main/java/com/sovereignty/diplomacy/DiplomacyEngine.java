@@ -16,8 +16,13 @@ import java.util.Optional;
  *   <li>NEUTRAL → NON_AGGRESSION → ALLY</li>
  *   <li>NEUTRAL → RIVAL</li>
  *   <li>Any → OVERLORD/VASSAL (via Subjugation war or voluntary deal)</li>
- *   <li>Vassal tribute: daily automated % of economy.</li>
+ *   <li><b>Phase 2:</b> Invisible automatic tribute is replaced by
+ *       physical Trade Caravans (see {@link #schedulePhysicalTribute()}).
+ *       The Vault amount is withdrawn, stored in a caravan entity's PDC,
+ *       and physically transported to the overlord's Core.</li>
  *   <li>Liberty Desire &gt; 50 % → tribute stops; ≥ 80 % → Independence War.</li>
+ *   <li><b>Phase 2:</b> Breaking a Non-Aggression Pact early incurs a
+ *       severe Stability penalty (configurable in {@code config.yml}).</li>
  * </ul>
  */
 public interface DiplomacyEngine {
@@ -63,10 +68,22 @@ public interface DiplomacyEngine {
     List<Long> getVassalIds(long overlordId);
 
     /**
-     * Processes the daily vassal tribute tick for all active vassal relationships.
-     * Skips vassals whose Liberty Desire exceeds 50 %.
+     * Schedules the daily physical trade caravan tribute tick.
+     *
+     * <p><b>Phase 2 replacement for {@code processDailyTribute()}.</b>
+     * Instead of invisible money transfers, this method:
+     * <ol>
+     *   <li>Iterates all active vassal/trade relationships.</li>
+     *   <li>Withdraws the tribute amount via the Vault API.</li>
+     *   <li>Spawns a physical caravan entity with the Vault value
+     *       stored in its PDC.</li>
+     *   <li>The caravan physically pathfinds from the vassal's Core
+     *       to the overlord's Core.</li>
+     * </ol>
+     *
+     * <p>Skips vassals whose Liberty Desire exceeds 50%.
      */
-    void processDailyTribute();
+    void schedulePhysicalTribute();
 
     /**
      * Recalculates Liberty Desire for a vassal based on overlord strength,
@@ -76,4 +93,14 @@ public interface DiplomacyEngine {
      * @param overlord  the overlord province
      */
     void recalculateLibertyDesire(Province vassal, Province overlord);
+
+    /**
+     * Calculates the Stability penalty for breaking a Non-Aggression Pact
+     * before its natural expiration.
+     *
+     * @param provinceA the province breaking the NAP
+     * @param provinceB the other party
+     * @return the stability penalty amount
+     */
+    double calculateNapBreakPenalty(long provinceA, long provinceB);
 }

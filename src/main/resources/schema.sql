@@ -2,6 +2,7 @@
 -- Sovereignty — SQL Schema Definitions
 -- Relational schema for PostgreSQL / MySQL with proper indexing for
 -- spatial chunk lookups and the feudal vassal tree.
+-- Phase 2: Council Roles, Caravans, Era Progression
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -11,6 +12,7 @@ CREATE TABLE IF NOT EXISTS sov_players (
     uuid         CHAR(36)     PRIMARY KEY,
     name         VARCHAR(16)  NOT NULL,
     rank         VARCHAR(16)  NOT NULL DEFAULT 'CITIZEN',   -- CITIZEN, LORD, SUZERAIN, EMPEROR
+    council_role VARCHAR(16)  NOT NULL DEFAULT 'NONE',      -- NONE, MARSHAL, CHANCELLOR, STEWARD
     influence    DOUBLE       NOT NULL DEFAULT 0.0,
     wealth       DOUBLE       NOT NULL DEFAULT 0.0,
     province_id  BIGINT       DEFAULT NULL,                 -- FK → sov_provinces (nullable for landless)
@@ -40,6 +42,7 @@ CREATE TABLE IF NOT EXISTS sov_provinces (
     liberty_desire  DOUBLE       NOT NULL DEFAULT 0.0,      -- 0–100 (vassals only)
     development     INT          NOT NULL DEFAULT 1,
     war_exhaustion  DOUBLE       NOT NULL DEFAULT 0.0,
+    era             VARCHAR(16)  NOT NULL DEFAULT 'TRIBAL', -- TRIBAL, FEUDAL, GUNPOWDER
     created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_province_owner    FOREIGN KEY (owner_uuid)  REFERENCES sov_players (uuid),
@@ -116,3 +119,47 @@ CREATE TABLE IF NOT EXISTS sov_wars (
 CREATE INDEX idx_wars_attacker ON sov_wars (attacker_id);
 CREATE INDEX idx_wars_defender ON sov_wars (defender_id);
 CREATE INDEX idx_wars_phase    ON sov_wars (phase);
+
+-- ---------------------------------------------------------------------------
+-- 6. Council Roles — Phase 2: Specialized roles for small-team provinces.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sov_council_roles (
+    id          BIGINT      PRIMARY KEY AUTO_INCREMENT,
+    province_id BIGINT      NOT NULL,                       -- FK → sov_provinces
+    player_uuid CHAR(36)    NOT NULL,                       -- FK → sov_players
+    role        VARCHAR(16) NOT NULL DEFAULT 'NONE',        -- NONE, MARSHAL, CHANCELLOR, STEWARD
+    assigned_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_role_province FOREIGN KEY (province_id) REFERENCES sov_provinces (id)
+                                ON DELETE CASCADE,
+    CONSTRAINT fk_role_player   FOREIGN KEY (player_uuid) REFERENCES sov_players (uuid)
+                                ON DELETE CASCADE,
+    CONSTRAINT uq_role_player   UNIQUE (player_uuid),
+    CONSTRAINT uq_role_slot     UNIQUE (province_id, role)
+);
+
+CREATE INDEX idx_council_province ON sov_council_roles (province_id);
+
+-- ---------------------------------------------------------------------------
+-- 7. Caravans — Phase 2: Physical trade caravan audit log.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sov_caravans (
+    id              BIGINT      PRIMARY KEY AUTO_INCREMENT,
+    entity_uuid     CHAR(36)    NOT NULL,
+    source_province BIGINT      NOT NULL,                   -- FK → sov_provinces
+    target_province BIGINT      NOT NULL,                   -- FK → sov_provinces
+    vault_value     DOUBLE      NOT NULL DEFAULT 0.0,
+    status          VARCHAR(16) NOT NULL DEFAULT 'IN_TRANSIT', -- IN_TRANSIT, DELIVERED, AMBUSHED, EXPIRED
+    spawned_at      TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at    TIMESTAMP   DEFAULT NULL,
+    killer_uuid     CHAR(36)    DEFAULT NULL,               -- Non-null if AMBUSHED
+
+    CONSTRAINT fk_caravan_source FOREIGN KEY (source_province) REFERENCES sov_provinces (id)
+                                 ON DELETE CASCADE,
+    CONSTRAINT fk_caravan_target FOREIGN KEY (target_province) REFERENCES sov_provinces (id)
+                                 ON DELETE CASCADE
+);
+
+CREATE INDEX idx_caravans_status ON sov_caravans (status);
+CREATE INDEX idx_caravans_source ON sov_caravans (source_province);
+CREATE INDEX idx_caravans_target ON sov_caravans (target_province);
