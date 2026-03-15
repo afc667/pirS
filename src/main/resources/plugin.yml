@@ -5,6 +5,11 @@ api-version: '1.20'
 description: A hardcore RPG Claim Engine merging Factions, Towny, and Paradox grand strategy.
 authors:
   - Sovereignty Team
+softdepend:
+  - Vault
+  - dynmap
+  - ItemsAdder
+  - Progressions
 commands:
   province:
     description: Province management commands
@@ -15,3 +20,12 @@ commands:
   war:
     description: Warfare management commands
     aliases: [siege]
+  role:
+    description: Council role management commands
+    aliases: [council]
+  caravan:
+    description: Trade caravan management commands
+    aliases: [trade]
+  spy:
+    description: Espionage and sabotage commands
+    aliases: [espionage]

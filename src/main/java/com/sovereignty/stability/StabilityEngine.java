@@ -27,15 +27,34 @@ import java.util.logging.Logger;
  * High-development provinces exert cultural influence proportional to
  * {@code development / distance}. If a neighbour's stability is low
  * and cultural pressure is high, border chunks can flip automatically.
+ *
+ * <p><b>Phase 2 Note:</b> Cultural Pressure is wrapped behind the
+ * {@code stability.cultural-pressure} configuration toggle (default: {@code false}).
+ * When disabled, the cultural pressure async task does not initialize,
+ * saving CPU cycles and preventing passive AFK dominance in Micro-SMP
+ * environments.
  */
 public final class StabilityEngine {
 
     private final ProvinceManager provinceManager;
     private final Logger logger;
+    private final boolean culturalPressureEnabled;
 
-    public StabilityEngine(ProvinceManager provinceManager, Logger logger) {
+    /**
+     * Constructs the StabilityEngine with a cultural pressure toggle.
+     *
+     * @param provinceManager        the province manager
+     * @param culturalPressureEnabled whether cultural pressure mechanics are active
+     * @param logger                 the plugin logger
+     */
+    public StabilityEngine(ProvinceManager provinceManager, boolean culturalPressureEnabled,
+                           Logger logger) {
         this.provinceManager = provinceManager;
+        this.culturalPressureEnabled = culturalPressureEnabled;
         this.logger = logger;
+        if (!culturalPressureEnabled) {
+            logger.info("[StabilityEngine] Cultural Pressure is DISABLED (config toggle).");
+        }
     }
 
     /**
@@ -98,6 +117,10 @@ public final class StabilityEngine {
      * Computes the cultural pressure exerted by {@code source} on
      * {@code target} for potential peaceful annexation of border chunks.
      *
+     * <p><b>Phase 2:</b> This method returns {@code false} immediately
+     * if cultural pressure is disabled via configuration, preventing
+     * the async task from ever executing.
+     *
      * @param source         the culturally dominant province
      * @param target         the neighbouring province
      * @param distanceChunks chunk distance between the two cores
@@ -105,8 +128,20 @@ public final class StabilityEngine {
      *         target's effective resistance (stability / 10)
      */
     public boolean canCulturallyAnnex(Province source, Province target, double distanceChunks) {
+        if (!culturalPressureEnabled) {
+            return false;
+        }
         double pressure = source.computeCulturalPressure(distanceChunks);
         double resistance = target.getStability() / 10.0;
         return pressure > resistance;
+    }
+
+    /**
+     * Returns whether cultural pressure mechanics are enabled.
+     *
+     * @return {@code true} if cultural pressure is active
+     */
+    public boolean isCulturalPressureEnabled() {
+        return culturalPressureEnabled;
     }
 }

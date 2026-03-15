@@ -1,5 +1,7 @@
 # ============================================================================
 # Sovereignty — Configuration
+# A Hardcore RPG Claim Engine for PaperMC 1.20.1+
+# Phase 2: Micro-SMP (10-player) optimized gameplay
 # ============================================================================
 
 database:
@@ -27,6 +29,10 @@ stability:
   high-tax-penalty: 10.0
   civil-war-threshold: 20.0
   civil-war-liberty-spike: 40.0
+  # Cultural Pressure toggle — set to false for Micro-SMP environments.
+  # When false, the cultural pressure async task does not initialize,
+  # saving CPU cycles and preventing passive AFK dominance.
+  cultural-pressure: false
 
 # Warfare
 warfare:
@@ -34,8 +40,59 @@ warfare:
   siege-window-start: "20:00"
   siege-window-end: "22:00"
 
-# Vassal / Tribute
+# Vassal / Tribute — Physical Caravan System
+# Invisible automatic tribute has been replaced by physical trade caravans.
+# Tribute is withdrawn via Vault, stored in a caravan entity's PDC, and
+# physically transported between province cores.
 vassalage:
   tribute-rate: 0.10              # 10% of vassal's daily income
   liberty-desire-tribute-halt: 50.0
   liberty-desire-independence: 80.0
+
+# ─── Phase 2: Caravan System (Vault Integration) ─────────────────────────
+caravan:
+  entity-type: LLAMA               # Entity type for trade caravans
+  speed: 0.6                       # Caravan movement speed modifier
+  despawn-timeout-minutes: 30      # Max lifetime before auto-despawn
+  daily-spawn-tick: "12:00"        # Server time when daily caravans spawn
+
+# ─── Phase 2: NAP Stability Penalty ─────────────────────────────────────
+diplomacy:
+  nap-break-stability-penalty: 25.0  # Stability penalty for breaking a NAP early
+
+# ─── Phase 2: ItemsAdder Integration ────────────────────────────────────
+itemsadder:
+  enabled: true
+  namespaces:
+    core-block: "sovereignty:government_stone"
+    siege-cannon: "sovereignty:siege_cannon"
+    forged-passport: "sovereignty:forged_passport"
+    steel-sword: "sovereignty:steel_sword"
+
+# ─── Phase 2: Progressions / Tech Tree ──────────────────────────────────
+progressions:
+  enabled: true
+  era-advancement:
+    feudal-sacrifice:
+      # Resources required to sacrifice at the Core to reach Feudal era
+      IRON_INGOT: 64
+      GOLD_INGOT: 32
+      EMERALD: 16
+    gunpowder-sacrifice:
+      # Resources required for Gunpowder era advancement
+      DIAMOND: 32
+      NETHERITE_SCRAP: 8
+      GUNPOWDER: 64
+
+# ─── Phase 2: Dynmap Integration ────────────────────────────────────────
+dynmap:
+  enabled: true
+  border-opacity: 0.35
+  border-weight: 2
+  fill-opacity: 0.15
+
+# ─── Phase 2: Espionage / Sabotage ──────────────────────────────────────
+espionage:
+  sabotage-radius: 5               # Block radius from enemy Core
+  sabotage-duration-seconds: 15    # Uninterrupted sneak duration
+  sabotage-stability-drain: 15.0   # Flat stability drain on success
