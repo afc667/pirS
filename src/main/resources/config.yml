@@ -1,0 +1,41 @@
+# ============================================================================
+# Sovereignty — Configuration
+# ============================================================================
+
+database:
+  host: "localhost"
+  port: 3306
+  name: "sovereignty"
+  username: "root"
+  password: ""
+
+# Province Core settings
+core:
+  default-hp: 100
+  max-level: 5
+  capital-claim-radius: 1          # 1 = 3x3 chunks
+
+# Claim expansion
+claims:
+  base-cost: 10.0                  # Base Influence cost per chunk
+  distance-scale-factor: 16.0     # Higher = gentler exponential curve
+  buffer-zone-chunks: 1           # Min wilderness gap between non-allied provinces
+
+# Stability
+stability:
+  overextension-per-chunk: 0.5
+  high-tax-penalty: 10.0
+  civil-war-threshold: 20.0
+  civil-war-liberty-spike: 40.0
+
+# Warfare
+warfare:
+  preparation-hours: 24
+  siege-window-start: "20:00"
+  siege-window-end: "22:00"
+
+# Vassal / Tribute
+vassalage:
+  tribute-rate: 0.10              # 10% of vassal's daily income
+  liberty-desire-tribute-halt: 50.0
+  liberty-desire-independence: 80.0
