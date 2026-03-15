@@ -283,7 +283,6 @@ public final class MercenaryManager {
             mercenary.sendMessage(MINI.deserialize(
                     "<red>✖ The hiring Lord is offline. Contract cannot be finalized.</red>"
             ));
-            pendingProposals.put(mercUuid, contract); // Re-queue
             return false;
         }
 

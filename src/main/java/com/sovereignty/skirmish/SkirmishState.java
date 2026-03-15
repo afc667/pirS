@@ -3,11 +3,14 @@ package com.sovereignty.skirmish;
 import com.sovereignty.models.ChunkPosition;
 
 /**
- * Immutable state object tracking an active Border Skirmish.
+ * Mutable state object tracking an active Border Skirmish.
  *
  * <p>Represents a single skirmish targeting one outermost border chunk
  * of a rival province. Tracks the attacking and defending provinces,
  * the target chunk coordinates, and the active combat phase.
+ *
+ * <p>The {@code active} field is volatile to support safe reads from
+ * event listeners while it is updated by the scheduled activation task.
  */
 public final class SkirmishState {
 

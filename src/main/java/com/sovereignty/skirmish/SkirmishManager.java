@@ -242,7 +242,8 @@ public final class SkirmishManager implements Listener {
      */
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
     public void onBlockBreak(BlockBreakEvent event) {
-        if (!event.isCancelled()) return; // Only intervene if normally blocked
+        // Only intervene if another listener cancelled this event (protection plugin)
+        if (!event.isCancelled()) return;
 
         Block block = event.getBlock();
         ChunkPosition pos = toChunkPosition(block);

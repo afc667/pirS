@@ -297,7 +297,7 @@ public final class RelicManager implements Listener {
         Optional<Province> provinceOpt = provinceManager.getProvinceAt(chunkPos);
         if (provinceOpt.isEmpty()) return;
         Province province = provinceOpt.get();
-        if (province.getOwnerUuid().equals(shooter.getUniqueId())) return;
+        if (province.hasMember(shooter.getUniqueId())) return;
 
         // Infect the chunk
         Instant expiry = Instant.now().plusSeconds(DISEASE_SPORE_DURATION_TICKS / 20L);
@@ -327,7 +327,7 @@ public final class RelicManager implements Listener {
                 for (Entity entity : chunk.getEntities()) {
                     if (entity instanceof Player defender) {
                         // Only debuff defenders (province members, not attackers)
-                        if (province.getOwnerUuid().equals(defender.getUniqueId())) {
+                        if (province.hasMember(defender.getUniqueId())) {
                             defender.addPotionEffect(new PotionEffect(
                                     PotionEffectType.POISON, 100, 1, false, true, true));
                             defender.addPotionEffect(new PotionEffect(
@@ -383,7 +383,8 @@ public final class RelicManager implements Listener {
                             GOGGLES_DETECTION_RADIUS, GOGGLES_DETECTION_RADIUS, GOGGLES_DETECTION_RADIUS);
                     for (Entity entity : nearby) {
                         if (!(entity instanceof Player target)) continue;
-                        if (province.getOwnerUuid().equals(target.getUniqueId())) continue;
+                        // Skip province members (only apply Glowing to enemies)
+                        if (province.hasMember(target.getUniqueId())) continue;
 
                         // Apply Glowing effect to enemy for 3 seconds (refreshed by scan)
                         target.addPotionEffect(new PotionEffect(
@@ -419,7 +420,7 @@ public final class RelicManager implements Listener {
         Optional<Province> provinceOpt = provinceManager.getProvinceById(coreBlock.getProvinceId());
         if (provinceOpt.isEmpty()) return;
         Province province = provinceOpt.get();
-        if (province.getOwnerUuid().equals(player.getUniqueId())) return;
+        if (province.hasMember(player.getUniqueId())) return;
 
         // Apply 3× structural damage during siege (base damage = 1)
         int baseDamage = 1;
@@ -471,7 +472,7 @@ public final class RelicManager implements Listener {
         Optional<Province> provinceOpt = provinceManager.getProvinceById(coreBlock.getProvinceId());
         if (provinceOpt.isEmpty()) return;
         Province province = provinceOpt.get();
-        if (province.getOwnerUuid().equals(player.getUniqueId())) return;
+        if (province.hasMember(player.getUniqueId())) return;
 
         // Consume the Demon Ash
         mainHand.setAmount(mainHand.getAmount() - 1);
@@ -485,8 +486,8 @@ public final class RelicManager implements Listener {
         Collection<Entity> nearby = coreLoc.getWorld().getNearbyEntities(coreLoc, 16, 16, 16);
         for (Entity entity : nearby) {
             if (entity instanceof Player target) {
-                // Apply blindness to defenders only
-                if (province.getOwnerUuid().equals(target.getUniqueId())) {
+                // Apply blindness to all province defenders (members)
+                if (province.hasMember(target.getUniqueId())) {
                     target.addPotionEffect(new PotionEffect(
                             PotionEffectType.BLINDNESS, 200, 0, false, true, true)); // 10 seconds
                 }
@@ -600,10 +601,12 @@ public final class RelicManager implements Listener {
      */
     public void activateResonance(long provinceId) {
         resonanceProvinces.add(provinceId);
-        // Double the Core HP
+        // Double the Core HP (capped at Integer.MAX_VALUE / 2 to prevent overflow)
         provinceManager.getProvinceById(provinceId).ifPresent(province -> {
             CoreBlock core = province.getCore();
-            core.setHp(core.getHp() * CRYSTAL_HP_MULTIPLIER);
+            int maxSafeHp = Integer.MAX_VALUE / CRYSTAL_HP_MULTIPLIER;
+            int currentHp = Math.min(core.getHp(), maxSafeHp);
+            core.setHp(currentHp * CRYSTAL_HP_MULTIPLIER);
         });
 
         Component alert = MINI.deserialize(
