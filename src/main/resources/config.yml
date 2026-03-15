@@ -5,11 +5,17 @@
 # ============================================================================
 
 database:
+  # Database type: "mysql" for production, "sqlite" for local testing
+  type: "mysql"
+  # MySQL settings (used when type is "mysql")
   host: "localhost"
   port: 3306
   name: "sovereignty"
   username: "root"
   password: ""
+  # SQLite settings (used when type is "sqlite")
+  # File path is relative to the plugin data folder
+  file: "sovereignty.db"
 
 # Province Core settings
 core:

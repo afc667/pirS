@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 /**
  * Manages the HikariCP connection pool and provides asynchronous
- * database access.
+ * database access for both MySQL and SQLite backends.
  *
  * <p><b>Thread-Safety Contract:</b> Every public method that touches the
  * database returns a {@link CompletableFuture} executed on a dedicated
@@ -31,9 +31,10 @@ public final class DatabaseManager {
     private final HikariDataSource dataSource;
     private final ExecutorService executor;
     private final Logger logger;
+    private final boolean sqlite;
 
     /**
-     * Creates and configures the HikariCP pool.
+     * Creates and configures the HikariCP pool for MySQL.
      *
      * @param host     database host
      * @param port     database port
@@ -45,6 +46,7 @@ public final class DatabaseManager {
     public DatabaseManager(String host, int port, String database,
                            String username, String password, Logger logger) {
         this.logger = logger;
+        this.sqlite = false;
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database);
@@ -66,12 +68,50 @@ public final class DatabaseManager {
         config.setInitializationFailTimeout(-1);
 
         this.dataSource = new HikariDataSource(config);
+        this.executor = Executors.newFixedThreadPool(4, r -> {
+            Thread t = new Thread(r, "Sovereignty-DB");
+            t.setDaemon(true);
+            return t;
+        });
+    }
+
+    /**
+     * Creates and configures the HikariCP pool for SQLite.
+     *
+     * @param sqlitePath absolute path to the SQLite database file
+     * @param logger     plugin logger
+     */
+    public DatabaseManager(String sqlitePath, Logger logger) {
+        this.logger = logger;
+        this.sqlite = true;
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:sqlite:" + sqlitePath);
+        config.setDriverClassName("org.sqlite.JDBC");
+        // SQLite supports only one writer at a time; keep the pool small
+        config.setMaximumPoolSize(1);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(5_000);
+        config.setIdleTimeout(300_000);
+        config.setMaxLifetime(600_000);
+        config.addDataSourceProperty("journal_mode", "WAL");
+        config.addDataSourceProperty("foreign_keys", "true");
+        config.setInitializationFailTimeout(-1);
+
+        this.dataSource = new HikariDataSource(config);
         // Dedicated pool — keeps DB I/O off the Netty / main-thread pools
         this.executor = Executors.newFixedThreadPool(4, r -> {
             Thread t = new Thread(r, "Sovereignty-DB");
             t.setDaemon(true);
             return t;
         });
+    }
+
+    /**
+     * Returns {@code true} if this manager is backed by SQLite.
+     */
+    public boolean isSQLite() {
+        return sqlite;
     }
 
     /**
@@ -85,15 +125,17 @@ public final class DatabaseManager {
     }
 
     /**
-     * Executes the bundled {@code schema.sql} to create / migrate tables.
+     * Executes the bundled schema SQL to create / migrate tables.
+     * Uses {@code schema-sqlite.sql} for SQLite or {@code schema.sql} for MySQL.
      *
      * @return a future that completes when schema initialization is done
      */
     public CompletableFuture<Void> initializeSchema() {
         return CompletableFuture.runAsync(() -> {
-            try (InputStream is = getClass().getClassLoader().getResourceAsStream("schema.sql")) {
+            String schemaFile = sqlite ? "schema-sqlite.sql" : "schema.sql";
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream(schemaFile)) {
                 if (is == null) {
-                    logger.severe("schema.sql not found in plugin resources!");
+                    logger.severe(schemaFile + " not found in plugin resources!");
                     return;
                 }
                 String sql = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))
@@ -108,7 +150,7 @@ public final class DatabaseManager {
                         }
                     }
                 }
-                logger.info("Database schema initialized successfully.");
+                logger.info("Database schema initialized successfully (" + (sqlite ? "SQLite" : "MySQL") + ").");
             } catch (SQLException | IOException e) {
                 logger.log(Level.SEVERE, "Failed to initialize database schema", e);
             }

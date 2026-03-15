@@ -29,6 +29,9 @@ dependencies {
     // HikariCP — high-performance JDBC connection pool
     implementation("com.zaxxer:HikariCP:5.1.0")
 
+    // SQLite JDBC — embedded database for local / single-server testing
+    implementation("org.xerial:sqlite-jdbc:3.47.1.0")
+
     // Caffeine — high-performance caching library for O(1) chunk lookups
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 }
@@ -50,6 +53,7 @@ tasks.shadowJar {
     archiveClassifier.set("")
     relocate("com.zaxxer.hikari", "com.sovereignty.libs.hikari")
     relocate("com.github.benmanes.caffeine", "com.sovereignty.libs.caffeine")
+    relocate("org.sqlite", "com.sovereignty.libs.sqlite")
 }
 
 tasks.build {

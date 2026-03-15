@@ -23,6 +23,7 @@ import com.sovereignty.skirmish.SkirmishManager;
 import com.sovereignty.stability.StabilityEngine;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.logging.Level;
 
 /**
@@ -79,15 +80,28 @@ public final class SovereigntyPlugin extends JavaPlugin {
 
         // ── 1. Configuration ─────────────────────────────────────────────
         saveDefaultConfig();
-        String dbHost = getConfig().getString("database.host", "localhost");
-        int dbPort = getConfig().getInt("database.port", 3306);
-        String dbName = getConfig().getString("database.name", "sovereignty");
-        String dbUser = getConfig().getString("database.username", "root");
-        String dbPass = getConfig().getString("database.password", "");
+        String dbType = getConfig().getString("database.type", "mysql").toLowerCase();
 
         // ── 2. Database ──────────────────────────────────────────────────
         try {
-            databaseManager = new DatabaseManager(dbHost, dbPort, dbName, dbUser, dbPass, getLogger());
+            if ("sqlite".equals(dbType)) {
+                String dbFile = getConfig().getString("database.file", "sovereignty.db");
+                File dataFolder = getDataFolder();
+                if (!dataFolder.exists()) {
+                    dataFolder.mkdirs();
+                }
+                String sqlitePath = new File(dataFolder, dbFile).getAbsolutePath();
+                databaseManager = new DatabaseManager(sqlitePath, getLogger());
+                getLogger().info("Using SQLite database: " + sqlitePath);
+            } else {
+                String dbHost = getConfig().getString("database.host", "localhost");
+                int dbPort = getConfig().getInt("database.port", 3306);
+                String dbName = getConfig().getString("database.name", "sovereignty");
+                String dbUser = getConfig().getString("database.username", "root");
+                String dbPass = getConfig().getString("database.password", "");
+                databaseManager = new DatabaseManager(dbHost, dbPort, dbName, dbUser, dbPass, getLogger());
+                getLogger().info("Using MySQL database: " + dbHost + ":" + dbPort + "/" + dbName);
+            }
         } catch (Exception ex) {
             getLogger().log(Level.SEVERE,
                     "Failed to create database pool — DB features will be unavailable until restart. "
