@@ -212,4 +212,13 @@ public final class ProvinceManager {
     public ChunkCache getChunkCache() {
         return chunkCache;
     }
+
+    /**
+     * Returns all loaded provinces (read-only snapshot for iteration).
+     *
+     * @return an unmodifiable collection of all cached provinces
+     */
+    public java.util.Collection<Province> getAllProvinces() {
+        return java.util.Collections.unmodifiableCollection(provinceById.values());
+    }
 }

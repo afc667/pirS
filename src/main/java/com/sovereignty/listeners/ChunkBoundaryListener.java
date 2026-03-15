@@ -104,8 +104,9 @@ public final class ChunkBoundaryListener implements Listener {
         }
 
         // Only send the ActionBar if the territory actually changed
+        // (previous is null on first movement — show the initial territory)
         String previous = lastTerritory.put(player.getUniqueId(), currentTerritory);
-        if (!currentTerritory.equals(previous)) {
+        if (previous == null || !currentTerritory.equals(previous)) {
             player.sendActionBar(msg);
         }
     }

@@ -29,6 +29,10 @@ public final class SovereigntyItems {
 
     private static NamespacedKey ITEM_ID_KEY;
 
+    /** Intentionally uses the same "itemsadder_id" key so that vanilla-tagged
+     *  items are recognised by ItemsAdderListener and vice-versa. */
+    private static final String PDC_KEY_NAME = "itemsadder_id";
+
     private SovereigntyItems() { /* utility class */ }
 
     /**
@@ -37,7 +41,7 @@ public final class SovereigntyItems {
      * @param plugin the owning plugin instance
      */
     public static void initKeys(Plugin plugin) {
-        ITEM_ID_KEY = new NamespacedKey(plugin, "itemsadder_id");
+        ITEM_ID_KEY = new NamespacedKey(plugin, PDC_KEY_NAME);
     }
 
     /** Returns the {@link NamespacedKey} used to tag custom items. */

@@ -208,6 +208,6 @@ public final class RoleCommand implements CommandExecutor, TabCompleter {
     private String nameOrEmpty(UUID uuid) {
         if (uuid == null) return "(vacant)";
         Player p = Bukkit.getPlayer(uuid);
-        return p != null ? p.getName() : uuid.toString();
+        return p != null ? p.getName() : "(offline)";
     }
 }

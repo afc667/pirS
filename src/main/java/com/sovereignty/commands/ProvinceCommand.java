@@ -346,22 +346,22 @@ public final class ProvinceCommand implements CommandExecutor, TabCompleter {
     }
 
     private Optional<Province> findPlayerProvince(Player player) {
-        // Scan loaded provinces for one owned by this player
+        // First check if the player is standing in their own province
         ChunkPosition pos = playerChunk(player);
         Optional<Province> atChunk = provinceManager.getProvinceAt(pos);
         if (atChunk.isPresent() && atChunk.get().getOwnerUuid().equals(player.getUniqueId())) {
             return atChunk;
         }
-        // Fallback: the manager doesn't expose a byOwner query yet, so
-        // we return empty — the player must stand in their own province.
-        return Optional.empty();
+        // Fallback: scan all provinces for one owned by this player
+        return provinceManager.getAllProvinces().stream()
+                .filter(p -> p.getOwnerUuid().equals(player.getUniqueId()))
+                .findFirst();
     }
 
     private Optional<Province> findProvinceByName(String name) {
-        // The manager doesn't expose a byName query, so we check the
-        // province at the sender's current chunk. A full name-search
-        // would require iterating all provinces.
-        return Optional.empty();
+        return provinceManager.getAllProvinces().stream()
+                .filter(p -> p.getName().toLowerCase().equals(name))
+                .findFirst();
     }
 
     private RelicType findRelic(String name) {
