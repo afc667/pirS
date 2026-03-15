@@ -53,7 +53,9 @@ tasks.shadowJar {
     archiveClassifier.set("")
     relocate("com.zaxxer.hikari", "com.sovereignty.libs.hikari")
     relocate("com.github.benmanes.caffeine", "com.sovereignty.libs.caffeine")
-    relocate("org.sqlite", "com.sovereignty.libs.sqlite")
+    // Note: org.sqlite must NOT be relocated — the native SQLite library uses JNI
+    // method names tied to the original package (Java_org_sqlite_core_NativeDB_*).
+    // Relocating the Java classes would break the JNI binding.
 }
 
 tasks.build {
