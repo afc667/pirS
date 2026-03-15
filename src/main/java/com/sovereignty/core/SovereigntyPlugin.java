@@ -15,8 +15,11 @@ import com.sovereignty.listeners.CorePlacementListener;
 import com.sovereignty.listeners.EspionageListener;
 import com.sovereignty.listeners.SiegeMechanicsListener;
 import com.sovereignty.managers.ProvinceManager;
+import com.sovereignty.mercenary.MercenaryManager;
 import com.sovereignty.models.CoreBlock;
+import com.sovereignty.relics.RelicManager;
 import com.sovereignty.roles.RoleManager;
+import com.sovereignty.skirmish.SkirmishManager;
 import com.sovereignty.stability.StabilityEngine;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -36,6 +39,13 @@ import java.util.logging.Level;
  *   <li>{@link ProgressionsHook} — Era-based tech tree feature gating</li>
  *   <li>{@link RoleManager} — Council roles (Marshal, Chancellor, Steward)</li>
  *   <li>{@link CaravanManager} — Physical trade caravan lifecycle</li>
+ * </ul>
+ *
+ * <h3>Phase 2.5: Micro-Events, Relics &amp; Polish</h3>
+ * <ul>
+ *   <li>{@link RelicManager} — 6 unique server-wide relics with ItemsAdder integration</li>
+ *   <li>{@link SkirmishManager} — Border skirmishes for low-stakes aggression</li>
+ *   <li>{@link MercenaryManager} — Solo player integration via hire contracts</li>
  * </ul>
  *
  * <h3>Startup Sequence</h3>
@@ -59,6 +69,9 @@ public final class SovereigntyPlugin extends JavaPlugin {
     private ItemsAdderListener itemsAdderListener;
     private ProgressionsHook progressionsHook;
     private CaravanManager caravanManager;
+    private RelicManager relicManager;
+    private SkirmishManager skirmishManager;
+    private MercenaryManager mercenaryManager;
 
     @Override
     public void onEnable() {
@@ -119,6 +132,12 @@ public final class SovereigntyPlugin extends JavaPlugin {
         caravanManager = new CaravanManager(this, vaultManager, provinceManager,
                 roleManager, getLogger());
 
+        // ── 8.5. Phase 2.5: Relics, Skirmishes & Mercenaries ────────────
+        relicManager = new RelicManager(this, provinceManager, itemsAdderListener,
+                dynmapHook, roleManager, null /* WarfareEngine impl TBD */, getLogger());
+        skirmishManager = new SkirmishManager(this, provinceManager, getLogger());
+        mercenaryManager = new MercenaryManager(this, vaultManager, provinceManager, getLogger());
+
         // ── 9. Event Listeners ───────────────────────────────────────────
         getServer().getPluginManager().registerEvents(
                 new ChunkBoundaryListener(provinceManager), this);
@@ -134,6 +153,9 @@ public final class SovereigntyPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new EspionageListener(this, provinceManager, itemsAdderListener,
                         dynmapHook, stabilityEngine, getLogger()), this);
+        // Phase 2.5 event listeners
+        getServer().getPluginManager().registerEvents(relicManager, this);
+        getServer().getPluginManager().registerEvents(skirmishManager, this);
 
         getLogger().info("Sovereignty v" + getDescription().getVersion() + " enabled.");
     }
@@ -161,4 +183,7 @@ public final class SovereigntyPlugin extends JavaPlugin {
     public ItemsAdderListener getItemsAdderListener() { return itemsAdderListener; }
     public ProgressionsHook getProgressionsHook() { return progressionsHook; }
     public CaravanManager getCaravanManager() { return caravanManager; }
+    public RelicManager getRelicManager() { return relicManager; }
+    public SkirmishManager getSkirmishManager() { return skirmishManager; }
+    public MercenaryManager getMercenaryManager() { return mercenaryManager; }
 }
